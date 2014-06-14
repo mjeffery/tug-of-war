@@ -1,0 +1,13 @@
+{
+  "name": "tugofwar",
+  "version": "0.0.0",
+  "author": "",
+  "description": "",
+  "repository": "",
+  "private": true,
+  "dependencies": {
+	"phaser-official": "latest",
+	"lodash": "latest"
+  }
+}
+
