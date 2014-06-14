@@ -1,0 +1,9 @@
+#game-container {
+	width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 40px;
+	border-width: 1px;
+	border-color: black;
+	border-style: solid;
+}
