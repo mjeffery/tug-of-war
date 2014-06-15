@@ -2,6 +2,7 @@
 	function Tank(game, x, y, team) {
 		var key = (team == Team.PLAYER) ?  'placeholder-tank.png' :  'placeholder-enemy-tank.png';
 		Phaser.Sprite.call(this, game, x, y, key);
+		this.initialize();
 	
 		this.anchor.setTo(0.5, 0);
 
@@ -15,6 +16,9 @@
 		this.facing = (team === Team.PLAYER) ? Phaser.RIGHT : Phaser.LEFT;
 
 		this.walk();
+		this.hp.setTo(50);
+		this.hp.x = -32;
+		this.hp.y = -32;
 	}
 
 	_.extend(Tank, {
@@ -27,6 +31,8 @@
 
 	Tank.prototype = Object.create(Phaser.Sprite.prototype);
 	Tank.prototype.constructor = Tank;
+
+	UnitMixin(Tank.prototype);
 
 	_.extend(Tank.prototype, {
 		think: function() {

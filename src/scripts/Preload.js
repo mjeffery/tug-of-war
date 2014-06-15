@@ -17,6 +17,7 @@
 
 			// Preload content here
 			load.image('horizon-line', 'assets/img/placeholder horizon.png');
+			HealthBar.preload(load);
 			Tank.preload(load);
 
 			load.onLoadComplete.addOnce(this.onLoadComplete, this);					

@@ -2,3 +2,6 @@ node_modules
 artwork
 bower_components
 .editorconfig
+.tmp
+dist
+*.swp
