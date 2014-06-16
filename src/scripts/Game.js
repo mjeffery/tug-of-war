@@ -18,7 +18,8 @@
 			game.team.enemy.add(new Tank(game, 680, 400, Team.ENEMY));
 		},
 		update: function() {
-
+			game.team.player.callAll('think');
+			game.team.enemy.callAll('think');
 		}
 	}
 

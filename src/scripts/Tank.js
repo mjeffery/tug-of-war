@@ -15,7 +15,6 @@
 		this.team = team;
 		this.facing = (team === Team.PLAYER) ? Phaser.RIGHT : Phaser.LEFT;
 
-		this.hp.setTo(50);
 		this.hp.x = -32;
 		this.hp.y = -32;
 
@@ -27,12 +26,12 @@
 		sword.visible = false;
 
 		this.walk();
-		this.attack();
 	}
 
 	_.extend(Tank, {
 		Walk: { Speed: 100 },
 		Attack: { 
+			Range: 50,
 			Angle: 135,
 			Duration: 600,
 			Easing: Phaser.Easing.Quartic.Out
@@ -52,7 +51,29 @@
 
 	_.extend(Tank.prototype, {
 		think: function() {
-			
+			var nearest = this.getNearestInFront();	
+
+			switch(this.state) {
+				case 'walking': 
+					if(nearest.dist <= Tank.Attack.Range) {
+						this.stop();
+						this.attack(nearest.unit);
+					}
+					break;
+			}
+		},
+		stop: function() {
+			switch(this.state) {
+				case 'walking': 
+					this.body.velocity.x = 0;
+					this.animations.play('idle');
+					this.state = 'idle';
+				break;
+				case 'attacking':
+					this.cleanUpAttack();
+					this.state = 'idle';
+				break;
+			}
 		},
 		walk: function() {
 			this.animations.play('walk');
@@ -64,22 +85,30 @@
 
 			this.state = 'walking';
 		},
-		attack: function() {
+		attack: function(victim) {
+			this.state = 'attacking';	
+
 			var sword = this.sword,
-				tween = this.game.add.tween(sword),
+				tween = this.sword.tween = this.game.add.tween(sword),
 				angle = (this.team == Team.PLAYER) ? Tank.Attack.Angle : -Tank.Attack.Angle;
 
 			sword.visible = true;
+			sword.angle = 0;
 
-			tween.to({ angle: angle }, Tank.Attack.Duration, Tank.Attack.Easing)
-				.onComplete.addOnce(function() {
-					sword.visible = false;
-					sword.angle = 0;
-					this.attack();
-					//TODO damage
-				}, this);
+			tween.to({ angle: angle }, Tank.Attack.Duration, Tank.Attack.Easing, true)
+				.onComplete.addOnce(this.cleanUpAttack, this);
 
-			tween.start();
+
+			//this.game.events.add();
+		},
+		cleanUpAttack: function() {
+			var sword = this.sword;
+
+			sword.visible = false;
+			if(sword.tween) {
+				if(sword.tween.isRunning) sword.tween.stop();
+				sword.tween = undefined;
+			}
 		}
 	});
 
