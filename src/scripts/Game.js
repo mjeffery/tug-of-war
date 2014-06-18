@@ -20,6 +20,17 @@
 		update: function() {
 			game.team.player.callAll('think');
 			game.team.enemy.callAll('think');
+		},
+		render: function() {
+			/*
+			function renderBodies(sprite) {
+				game.debug.geom(sprite.damageZone, 'rgba(215, 44, 44, 0.5);');
+				game.debug.body(sprite);
+			}
+
+			game.team.player.forEach(renderBodies);
+			game.team.enemy.forEach(renderBodies);
+			*/
 		}
 	}
 

@@ -29,6 +29,9 @@
 			if(max !== undefined) this.max = max;
 			this.value = value;
 		},
+		subtract: function(amount) {
+			this.value = this.value - amount;
+		},
 		_updateGraphics: function() {
 			var val = this.value,
 				max = this.max,

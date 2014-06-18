@@ -14,7 +14,7 @@
 
 		this.team = team;
 		this.facing = (team === Team.PLAYER) ? Phaser.RIGHT : Phaser.LEFT;
-
+		
 		this.hp.x = -32;
 		this.hp.y = -32;
 
@@ -25,6 +25,8 @@
 		sword.anchor.setTo(0.5, 1.0);
 		sword.visible = false;
 
+		this._zone = new Phaser.Rectangle();
+
 		this.walk();
 	}
 
@@ -34,7 +36,16 @@
 			Range: 50,
 			Angle: 135,
 			Duration: 600,
-			Easing: Phaser.Easing.Quartic.Out
+			Easing: Phaser.Easing.Quartic.Out,
+			DamageDelay: 100,
+			Damage: 40,
+			Zone: {
+				X: 120,
+				Y: 25,
+				Width: 120,
+				Height: 100
+			},
+			Cooldown: 0.5
 		},
 		preload: function(load) {
 			load.spritesheet('placeholder-tank.png', 'assets/spritesheet/placeholder tank.png', 78, 150);
@@ -58,6 +69,20 @@
 					if(nearest.dist <= Tank.Attack.Range) {
 						this.stop();
 						this.attack(nearest.unit);
+					}
+					break;
+
+				case 'standing':
+					if(nearest.dist <= Tank.Attack.Range) 
+						this.attack(nearest.unit);
+					else
+						this.walk();
+					break;
+
+				case 'cooling down':
+					this.cooldownTimer -= this.game.time.physicsElapsed;
+					if(this.cooldownTimer <= 0) {
+						this.stand();
 					}
 					break;
 			}
@@ -85,21 +110,41 @@
 
 			this.state = 'walking';
 		},
+		stand: function() {
+			this.state = 'standing';
+			this.body.velocity.x = 0;
+			this.animations.play('idle');
+		},
 		attack: function(victim) {
 			this.state = 'attacking';	
 
-			var sword = this.sword,
-				tween = this.sword.tween = this.game.add.tween(sword),
+			var game = this.game,
+				sword = this.sword,
+				tween = this.sword.tween = game.add.tween(sword),
 				angle = (this.team == Team.PLAYER) ? Tank.Attack.Angle : -Tank.Attack.Angle;
 
 			sword.visible = true;
+			sword.bringToTop();
 			sword.angle = 0;
 
+			// TODO how does interruption work?
 			tween.to({ angle: angle }, Tank.Attack.Duration, Tank.Attack.Easing, true)
-				.onComplete.addOnce(this.cleanUpAttack, this);
-
-
-			//this.game.events.add();
+				.onComplete.addOnce(this.attackCooldown, this);
+			
+			// use a rectangle for zone intersection
+			game.time.events.add(Tank.Attack.DamageDelay, function() {
+				var zone = this.damageZone;
+				this.foes.forEachExists(function(foe) {
+					if(zone.intersects(foe.body))
+						foe.damage(Tank.Attack.Damage);
+				}, this);
+			}, this);
+		},
+		attackCooldown: function() {
+			this.cleanUpAttack();
+			
+			this.state = 'cooling down';
+			this.cooldownTimer = Tank.Attack.Cooldown; 
 		},
 		cleanUpAttack: function() {
 			var sword = this.sword;
@@ -109,8 +154,25 @@
 				if(sword.tween.isRunning) sword.tween.stop();
 				sword.tween = undefined;
 			}
+		},
+		damage: function(amount) {
+			this.hp.subtract(amount);
+			
 		}
 	});
+
+	Object.defineProperty(Tank.prototype, 'damageZone', {
+		get: function() {
+			var w = Tank.Attack.Zone.Width,
+				h = Tank.Attack.Zone.Height,
+				x = this.x + (this.team === Team.PLAYER ? Tank.Attack.Zone.X - w : -Tank.Attack.Zone.X),
+				y = this.y + Tank.Attack.Zone.Y;
+
+			this._zone.setTo(x, y, Tank.Attack.Zone.Width, Tank.Attack.Zone.Height);	
+
+			return this._zone;
+		}
+	})
 
 	exports.Tank = Tank;
 })(this);
